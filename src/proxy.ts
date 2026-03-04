@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const protectedRoutes = ['/dashboard', '/settings', '/community', '/profile', '/leaderboard']
+  const protectedRoutes = ['/dashboard', '/settings', '/community', '/profile']
   const authRoutes = ['/login', '/signup']
 
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))

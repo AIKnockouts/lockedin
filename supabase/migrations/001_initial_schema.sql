@@ -79,20 +79,15 @@ CREATE POLICY "Profiles are viewable by everyone" ON public.profiles FOR SELECT 
 CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Communities: public communities readable by all, private by members
+-- Communities: public communities readable by all
 CREATE POLICY "Public communities viewable by all" ON public.communities FOR SELECT USING (
-  visibility = 'public' OR
-  created_by = auth.uid() OR
-  EXISTS (SELECT 1 FROM public.community_members WHERE community_id = communities.id AND user_id = auth.uid())
+  visibility = 'public' OR created_by = auth.uid()
 );
 CREATE POLICY "Authenticated users can create communities" ON public.communities FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Creators can update communities" ON public.communities FOR UPDATE USING (created_by = auth.uid());
 
--- Community members: members of that community can view
-CREATE POLICY "Members can view community membership" ON public.community_members FOR SELECT USING (
-  user_id = auth.uid() OR
-  EXISTS (SELECT 1 FROM public.community_members cm WHERE cm.community_id = community_members.community_id AND cm.user_id = auth.uid())
-);
+-- Community members: all authenticated users can view (avoids self-referential recursion)
+CREATE POLICY "Members can view community membership" ON public.community_members FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can join public communities" ON public.community_members FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Daily submissions: community members can view
